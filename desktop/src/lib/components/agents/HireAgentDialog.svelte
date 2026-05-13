@@ -32,6 +32,7 @@
   let cronExpr = $state('');
   let isSubmitting = $state(false);
   let errors = $state<Record<string, string>>({});
+  let submitError = $state<string | null>(null);
 
   function toggleSkill(skill: string) {
     if (selectedSkills.includes(skill)) {
@@ -56,6 +57,7 @@
     e.preventDefault();
     if (!validate()) return;
 
+    submitError = null;
     isSubmitting = true;
     const req: AgentCreateRequest = {
       name: name.trim(),
@@ -75,11 +77,18 @@
       schedule: cronExpr.trim() ? { cron: cronExpr.trim(), enabled: true } : undefined,
     };
 
-    const created = await agentsStore.createAgent(req);
-    isSubmitting = false;
-    if (created) {
-      resetForm();
-      onClose();
+    try {
+      const created = await agentsStore.createAgent(req);
+      if (created) {
+        resetForm();
+        onClose();
+      } else {
+        submitError = 'Failed to create agent. Check that the backend is running and try again.';
+      }
+    } catch (err) {
+      submitError = (err as Error)?.message || 'Unexpected error while creating agent.';
+    } finally {
+      isSubmitting = false;
     }
   }
 
@@ -98,6 +107,7 @@
     hardStop = true;
     cronExpr = '';
     errors = {};
+    submitError = null;
   }
 
   function handleBackdrop(e: MouseEvent) {
@@ -176,6 +186,10 @@
             {cronExpr}
             onCronExpr={(v) => (cronExpr = v)}
           />
+
+          {#if submitError}
+            <div class="had-submit-error" role="alert">{submitError}</div>
+          {/if}
         </div>
 
         <footer class="had-footer">
@@ -356,6 +370,16 @@
     border-top-color: #93c5fd;
     border-radius: 50%;
     animation: had-spin 0.7s linear infinite;
+  }
+
+  .had-submit-error {
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #fca5a5;
+    font-size: 12px;
+    line-height: 1.4;
   }
 
   @keyframes had-spin {
