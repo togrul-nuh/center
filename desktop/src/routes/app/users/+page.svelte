@@ -2,6 +2,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import PageShell from '$lib/components/layout/PageShell.svelte';
+  import InviteUserDialog from '$lib/components/users/InviteUserDialog.svelte';
   import { usersStore } from '$lib/stores/users.svelte';
   import type { UserRole } from '$api/types';
 
@@ -15,6 +16,8 @@
     { value: 'member', label: 'Member' },
     { value: 'viewer', label: 'Viewer' },
   ];
+
+  let inviteOpen = $state(false);
 
   function roleClass(role: UserRole): string {
     return { admin: 'usr-role--admin', member: 'usr-role--member', viewer: 'usr-role--viewer' }[role];
@@ -51,6 +54,17 @@
       oninput={(e) => usersStore.setSearch((e.target as HTMLInputElement).value)}
       aria-label="Search users"
     />
+    <button
+      class="usr-invite-btn"
+      type="button"
+      onclick={() => (inviteOpen = true)}
+      aria-label="Invite user"
+    >
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+        <path d="M12 5v14M5 12h14" />
+      </svg>
+      Invite user
+    </button>
   {/snippet}
 
   {#if usersStore.loading && usersStore.users.length === 0}
@@ -103,6 +117,14 @@
   {/if}
 </PageShell>
 
+<InviteUserDialog
+  open={inviteOpen}
+  onClose={() => {
+    inviteOpen = false;
+    void usersStore.fetchUsers();
+  }}
+/>
+
 <style>
   .usr-filter-group {
     display: flex; align-items: center; gap: 2px;
@@ -120,6 +142,22 @@
     background: var(--dbg2); border: 1px solid var(--dbd); color: var(--dt); min-width: 220px;
   }
   .usr-search:focus { outline: none; border-color: #6366f1; }
+
+  .usr-invite-btn {
+    display: flex; align-items: center; gap: 6px;
+    height: 28px; padding: 0 12px;
+    border-radius: 6px; font-size: 12px; font-weight: 500;
+    background: rgba(59, 130, 246, 0.15);
+    border: 1px solid rgba(59, 130, 246, 0.35);
+    color: #93c5fd;
+    cursor: pointer;
+    transition: background 120ms ease, border-color 120ms ease;
+  }
+  .usr-invite-btn:hover {
+    background: rgba(59, 130, 246, 0.25);
+    border-color: rgba(59, 130, 246, 0.55);
+    color: #bfdbfe;
+  }
 
   .usr-loading, .usr-empty {
     display: flex; flex-direction: column; align-items: center;

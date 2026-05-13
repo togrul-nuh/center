@@ -1899,10 +1899,23 @@ export const templates = {
 
 // ── Invitations ───────────────────────────────────────────────────────────────
 
+export interface InvitationRecord {
+  id: string;
+  email: string;
+  role: string;
+  token: string;
+  organization_id: string | null;
+  invited_by: string | null;
+  accepted_at: string | null;
+  expires_at: string | null;
+  created_at: string;
+  inserted_at: string;
+}
+
 export const invitations = {
-  list: () => request<{ invitations: unknown[] }>("/invitations"),
-  create: (body: unknown) =>
-    request<void>("/invitations", {
+  list: () => request<{ invitations: InvitationRecord[] }>("/invitations"),
+  create: (body: { email: string; role: string; organization_id?: string }) =>
+    request<{ invitation: InvitationRecord }>("/invitations", {
       method: "POST",
       body: JSON.stringify(body),
     }),
